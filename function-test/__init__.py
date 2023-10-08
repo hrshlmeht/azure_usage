@@ -1,24 +1,24 @@
 import logging
-
+import requests
 import azure.functions as func
-
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Python HTTP trigger function processed a request.')
 
-    name = req.params.get('name')
-    if not name:
-        try:
-            req_body = req.get_json()
-        except ValueError:
-            pass
-        else:
-            name = req_body.get('name')
+    # Fetch a random word from the API
+    word = fetch_random_word()
 
-    if name:
-        return func.HttpResponse(f"Hello, {name}. This HTTP triggered function executed successfully.")
+    # Process the response
+    if word:
+        return func.HttpResponse(f"Random Word: {word}", status_code=200)
     else:
-        return func.HttpResponse(
-             "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response.",
-             status_code=200
-        )
+        return func.HttpResponse("Failed to fetch a random word from the API.", status_code=500)
+
+def fetch_random_word():
+    """Fetch a random word from an API endpoint."""
+    url = "https://random-word-api.herokuapp.com/word?number=1"
+    response = requests.get(url)
+    if response.status_code == 200:
+        words = response.json()
+        return words[0] if words else None
+    return None
